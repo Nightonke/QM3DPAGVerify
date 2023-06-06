@@ -286,13 +286,13 @@
         const searchLayerButton = document.getElementById("layer-search-button");
         performanceBtn.addEventListener("click", (event) => {
           event.stopPropagation();
-          performanceBtn.style.display = "none";
-          performancePopover.style.display = "block";
+          // performanceBtn.style.display = "none";
+          // performancePopover.style.display = "block";
         });
         performancePopover.addEventListener("click", (event) => {
           event.stopPropagation();
-          performancePopover.style.display = "none";
-          performanceBtn.style.display = "block";
+          // performancePopover.style.display = "none";
+          // performanceBtn.style.display = "block";
         });
         searchLayerInput.placeholder = '输入要搜索的图层名字';
         searchLayerInput.addEventListener("click", (event) => {
