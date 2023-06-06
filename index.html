@@ -77,12 +77,26 @@
         height: 100%;
         fill: #585858;
       }
-      .performance {
+      .layer-search-input {
         position: absolute;
         top: 8px;
         left: 8px;
+        width: 200px;
+        height: 30px;
+      }
+      .layer-search-button {
+        position: absolute;
+        top: 8px;
+        left: 230px;
+        width: 100px;
+        height: 30px;
+      }
+      .performance {
+        position: absolute;
+        top: 50px;
+        left: 8px;
         width: 350px;
-        height: 180px;
+        height: 240px;
         background: #fff;
         border: #bbb 1px solid;
         border-radius: 4px;
@@ -91,9 +105,9 @@
         box-sizing: border-box;
       }
       .performance p {
-        font-size: 12px;
+        font-size: 14px;
         margin: 0;
-        line-height: 12px;
+        line-height: 18px;
       }
       .background-btn {
         position: absolute;
@@ -169,6 +183,8 @@
         <p style="font-weight: bold">PAG信息（规则更新于23年6月2日）</p>
         <p style="font-weight: bold" id="performance-box"></p>
       </div>
+      <input class="layer-search-input" id="input"></input>
+      <button class="layer-search-button" id="layer-search-button">搜索图层</button>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/libpag@latest/lib/libpag.umd.js"></script>
     <script>
@@ -266,6 +282,8 @@
 
         const performanceBtn = document.getElementById("performance-btn");
         const performancePopover = document.getElementById("performance");
+        const searchLayerInput = document.getElementById("input");
+        const searchLayerButton = document.getElementById("layer-search-button");
         performanceBtn.addEventListener("click", (event) => {
           event.stopPropagation();
           performanceBtn.style.display = "none";
@@ -275,6 +293,16 @@
           event.stopPropagation();
           performancePopover.style.display = "none";
           performanceBtn.style.display = "block";
+        });
+        searchLayerInput.placeholder = '输入要搜索的图层名字';
+        searchLayerInput.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+        searchLayerButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (hadPAGView) {
+            searchLayer(searchLayerInput.value);
+          }
         });
 
         const backgroundBtn = document.getElementById("background-btn");
@@ -434,24 +462,23 @@
         };
       };
 
-      const verifySomething = (pagFile, layerName, layerType, verifySuccessMsg, verifyFailMsg) => {
-        let v = pagFile.getLayersByName(layerName);
+      const searchLayer = (name) => {
+        if (name.length == 0) {
+          return;
+        }
+        let v = pagFile.getLayersByName(name);
         let size = v.size();
-        let verifiedLayers = [];
+        if (size == 0) {
+          alert("没有找到名为 " + name + " 的图层");
+          return;
+        }
+        let msg = "找到了 " + size + " 个名为 " + name + " 的图层: ";
         for (let i = 0; i < size; i++) {
           let layer = v.get(i);
-          if (layerType === null) {
-            verifiedLayers.push(layer);
-          }
-          else if (layer.layerType() == layerType) {
-            verifiedLayers.push(layer);
-          }
+          msg += "\n";
+          msg += (i + 1) + ". " + "类型为 " + nameOfLayerType(layer.layerType());
         }
-        if (verifiedLayers.length > 0) {
-          return '有' + verifiedLayers.length + verifySuccessMsg;
-        } else {
-          return verifyFailMsg;
-        }
+        alert(msg);
       };
 
       const verifySomethingAndRefresh = (pagFile, layerName, layerType, verifySuccessMsg, verifyNameSuccessButTypeWrongMsg, verifyFailMsg, verifySuccessTimerBlock) => {
