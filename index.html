@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>在线预览</title>
+    <link
+      rel="icon"
+      href="https://pag.art/img/favicon/favicon.ico"
+      type="image/x-icon"
+    />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .player {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      .box {
+        position: absolute;
+        width: 960px;
+        height: 540px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .zebra {
+        background-color: #eee;
+        background-image: linear-gradient(45deg, #bbb 25%, transparent 0),
+          linear-gradient(45deg, transparent 75%, #bbb 0),
+          linear-gradient(45deg, #bbb 25%, transparent 0),
+          linear-gradient(45deg, transparent 75%, #bbb 0);
+        background-position: 0 0, 15px 15px, 15px 15px, 30px 30px;
+        background-size: 30px 30px;
+      }
+      .background-black {
+        background-color: #000;
+      }
+      .tip {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #757575;
+        font-size: 24px;
+        pointer-events: none;
+      }
+      .tip .text {
+        margin-top: 24px;
+      }
+      .canvas {
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .upload {
+        display: none;
+      }
+      .performance-btn {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+      .performance-icon {
+        width: 100%;
+        height: 100%;
+        fill: #585858;
+      }
+      .performance {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 350px;
+        height: 180px;
+        background: #fff;
+        border: #bbb 1px solid;
+        border-radius: 4px;
+        opacity: 0.6;
+        padding: 8px 8px;
+        box-sizing: border-box;
+      }
+      .performance p {
+        font-size: 12px;
+        margin: 0;
+        line-height: 12px;
+      }
+      .background-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+      }
+      .background-icon {
+        width: 100%;
+        height: 100%;
+        fill: #585858;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="player" id="player">
+      <div class="box" id="box">
+        <div class="tip" id="tip">
+          <img
+            src="https://pag.art/img/pagfile.png"
+            alt="icon"
+            width="128"
+            height="128"
+          />
+          <p class="text">点击上传或拖拽一个PAG文件到此处预览</p>
+        </div>
+      </div>
+      <canvas class="canvas" id="canvas"></canvas>
+      <input type="file" class="upload" id="upload" accept=".pag" />
+      <button
+        class="performance-btn"
+        id="performance-btn"
+        style="display: none"
+      >
+        <svg
+          t="1660116935264"
+          class="performance-icon"
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          p-id="2276"
+          width="200"
+          height="200"
+        >
+          <path
+            d="M509.92 795.84c157.904 0 285.92-128.016 285.92-285.92C795.84 352 667.808 224 509.92 224 352 224 224 352 224 509.92c0 157.904 128 285.92 285.92 285.92z m0 48C325.504 843.84 176 694.32 176 509.92 176 325.504 325.504 176 509.92 176c184.416 0 333.92 149.504 333.92 333.92 0 184.416-149.504 333.92-333.92 333.92z m-2.448-400.704h16a16 16 0 0 1 16 16v201.728a16 16 0 0 1-16 16h-16a16 16 0 0 1-16-16V459.136a16 16 0 0 1 16-16z m0-100.176h16a16 16 0 0 1 16 16v23.648a16 16 0 0 1-16 16h-16a16 16 0 0 1-16-16v-23.648a16 16 0 0 1 16-16z"
+            p-id="2277"
+          ></path>
+        </svg>
+      </button>
+      <button class="background-btn" id="background-btn" style="display: none">
+        <svg
+          t="1672885015824"
+          class="background-icon"
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          p-id="3763"
+          width="200"
+          height="200"
+        >
+          <path
+            d="M769.8432 344.2688h-90.3168V253.952c0-48.7424-39.5264-88.2688-88.2688-88.2688H254.1568C205.4144 165.888 165.888 205.4144 165.888 254.1568v337.3056c0 48.7424 39.5264 88.2688 88.2688 88.2688h90.3168V770.048c0 48.7424 39.5264 88.2688 88.2688 88.2688H770.048c48.7424 0 88.2688-39.5264 88.2688-88.2688V432.5376c-0.2048-48.7424-39.7312-88.2688-88.4736-88.2688z m30.5152 425.5744c0 16.7936-13.7216 30.5152-30.5152 30.5152H432.5376c-16.7936 0-30.5152-13.7216-30.5152-30.5152v-90.3168h189.44c48.7424 0 88.2688-39.5264 88.2688-88.2688v-189.44H770.048c16.7936 0 30.5152 13.7216 30.5152 30.5152v337.5104z"
+            p-id="3764"
+          ></path>
+        </svg>
+      </button>
+      <div class="performance" id="performance" style="display: block">
+        <p style="font-weight: bold">PAG信息（规则更新于23年6月2日）</p>
+        <p style="font-weight: bold" id="performance-box"></p>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/libpag@latest/lib/libpag.umd.js"></script>
+    <script>
+      let PAG;
+      let pagView;
+      let pagFile;
+      let hadPAGView = false;
+      let playerCanvas;
+      let verifySuccessTimers = new Set();
+      let verifyAlbumImagesIndex = 0;
+      const verifyAlbumImages = [
+        'https://raw.githubusercontent.com/Nightonke/QMPagVerify/main/T002R300x300M000001d49Na2ojIHl_1.webp', 
+        'https://raw.githubusercontent.com/Nightonke/QMPagVerify/main/T002R300x300M000001nkOGp2tXmr2_1.webp',
+        'https://raw.githubusercontent.com/Nightonke/QMPagVerify/main/T002R300x300M000003c616O2Zlswm_1.webp'
+      ];
+      let verifyAlbumColorsIndex = 0;
+      const verifyAlbumColors = [
+        {red: 255, green: 0, blue: 0}, 
+        {red: 0, green: 255, blue: 0},
+        {red: 0, green: 0, blue: 255}
+      ];
+      let verifyVisibleIndex = 0;
+      const verifyVisibles = [
+        false, true
+      ];
+      let verifyMusicianIndex = 0;
+      const verifyMusicians = [
+        'https://raw.githubusercontent.com/Nightonke/QMPagVerify/main/T001R500x500M000000xWYxn2aPheB_2.webp',
+        'https://raw.githubusercontent.com/Nightonke/QMPagVerify/main/T001R500x500M000002Z15JH27LgOK_2.webp',
+        'https://raw.githubusercontent.com/Nightonke/QMPagVerify/main/T001R500x500M000003kxRY52xEIyR_2.webp'
+      ];
+      let verifyAlbumDigitNumberIndex = 0;
+      const verifyAlbumDigitNumbers = [
+        'No.8457829',
+        'No.00234157',
+        'No.957265'
+      ];
+
+      const performanceData = {
+        layerResult: '',
+        PAGFileDecodeTime: 0,
+        PAGViewInitTime: 0,
+        renderingTime: 0,
+        imageDecodingTime: 0,
+        presentingTime: 0,
+      };
+      let fpsBuffer = [];
+
+      window.onload = async () => {
+        try {
+          PAG = await window.libpag.PAGInit();
+          console.log("PAG 初始化成功：", PAG);
+        } catch (e) {
+          alert("PAG 初始化失败，如需技术支持可到 https://bbs.pag.art/ 提问");
+          throw e;
+        }
+
+        if (/Firefox/i.test(navigator.userAgent)) {
+          console.log("Firefox 浏览器加载 ffavc 软件解码器");
+          if (await loadJS("https://unpkg.com/ffavc@latest/lib/ffavc.min.js")) {
+            const FFAVC = await window.ffavc.FFAVCInit();
+            const ffavcDecoderFactory = new FFAVC.FFAVCDecoderFactory();
+            PAG.registerSoftwareDecoderFactory(ffavcDecoderFactory);
+            console.log("加载 ffavc 软件解码器成功");
+          } else {
+            console.error("Load ffavc fail!");
+          }
+        }
+        resizeCanvas();
+
+        const player = document.getElementById("player");
+
+        player.addEventListener("click", () => {
+          document.getElementById("upload").click();
+        });
+        document.getElementById("upload").addEventListener("change", (event) => {
+          if (event.target) {
+            createPAGView(event.target.files[0]);
+          }
+        });
+
+        document.addEventListener("dragover", (ev) => {
+          ev.preventDefault();
+        });
+        document.addEventListener("drop", (ev) => {
+          ev.preventDefault();
+          if (ev.dataTransfer.files.length > 0) {
+            if (/\.(pag)$/.test(ev.dataTransfer.files[0].name)) {
+              createPAGView(ev.dataTransfer.files[0]);
+              return;
+            }
+          }
+          alert("请放入PAG文件进行预览！");
+        });
+
+        const performanceBtn = document.getElementById("performance-btn");
+        const performancePopover = document.getElementById("performance");
+        performanceBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          performanceBtn.style.display = "none";
+          performancePopover.style.display = "block";
+        });
+        performancePopover.addEventListener("click", (event) => {
+          event.stopPropagation();
+          performancePopover.style.display = "none";
+          performanceBtn.style.display = "block";
+        });
+
+        const backgroundBtn = document.getElementById("background-btn");
+        let isBackgroundZebra = true;
+        backgroundBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (isBackgroundZebra) {
+            player.classList.add("background-black");
+            player.classList.remove("zebra");
+          } else {
+            player.classList.add("zebra");
+            player.classList.remove("background-black");
+          }
+          isBackgroundZebra = !isBackgroundZebra;
+        });
+
+        const createPAGView = async (file) => {
+          // 清除提示
+          if (!hadPAGView) {
+            hadPAGView = true;
+            document.getElementById("box").style.display = "none";
+            player.classList.add("zebra");
+            performanceBtn.style.display = "none";
+            backgroundBtn.style.display = "block";
+          }
+          // 清除上一个 PAG 相关的资源
+          if (pagFile) pagFile.destroy();
+          if (pagView) pagView.destroy();
+          const decodeStartTime = performance.now();
+          pagFile = await PAG.PAGFile.load(file);
+          performanceData.PAGFileDecodeTime = performance.now() - decodeStartTime;
+          const initStartTime = performance.now();
+          pagView = await PAG.PAGView.init(pagFile, playerCanvas, {
+            useScale: false,
+            firstFrame: false,
+          });
+          performanceData.PAGViewInitTime = performance.now() - initStartTime;
+
+          for (const timer of verifySuccessTimers) {
+            clearInterval(timer);
+          }
+
+          performanceData.layerResult = '';
+          performanceData.layerResult 
+          += '\n' + verifySomethingAndRefresh(pagFile, 'replaceAlbumImage', 5, '个可以替换专辑图的layer', '个名为\"replaceAlbumImage\"的layer，但是类型不是Image，无法替换图片，', '没有可以替换专辑图的layer', function(verifiedLayers) {
+            if (verifyAlbumImagesIndex < verifyAlbumImages.length) {
+              const image = new Image();
+              image.onload = function() {
+                const pagImage = PAG.PAGImage.fromSource(image);
+                for (let i = 0; i < verifiedLayers.length; i++) {
+                  verifiedLayers[i].setImage(pagImage);
+                }
+              };
+              image.crossOrigin = 'anonymous';
+              image.src = verifyAlbumImages[verifyAlbumImagesIndex];
+              verifyAlbumImagesIndex++;
+              if (verifyAlbumImagesIndex >= verifyAlbumImages.length) {
+                verifyAlbumImagesIndex = 0;
+              }
+            }
+          });
+
+          performanceData.layerResult 
+          += '\n' + verifySomethingAndRefresh(pagFile, 'replaceMagicColor', 2, '个可以染魔法色的layer', '个名为\"replaceMagicColor\"的layer，但是类型不是Solid，无法染色，', '没有可以染魔法色的layer', function(verifiedLayers) {
+            if (verifyAlbumColorsIndex < verifyAlbumColors.length) {
+              for (let i = 0; i < verifiedLayers.length; i++) {
+                verifiedLayers[i].setSolidColor(verifyAlbumColors[verifyAlbumColorsIndex]);
+              }
+              verifyAlbumColorsIndex++;
+              if (verifyAlbumColorsIndex >= verifyAlbumColors.length) {
+                verifyAlbumColorsIndex = 0;
+              }
+            }
+          });
+
+          performanceData.layerResult
+          += '\n' + verifySomethingAndRefresh(pagFile, 'switchAlbum', null, '个名为\"switchAlbum\"的layer，表示\"切换封面按钮\"', '', '没有名为\"switchAlbum\"的layer，表示\"切换封面按钮\"', function(verifiedLayers) {
+            if (verifyVisibleIndex < verifyVisibles.length) {
+              for (let i = 0; i < verifiedLayers.length; i++) {
+                verifiedLayers[i].setVisible(verifyVisibles[verifyVisibleIndex]);
+              }
+              verifyVisibleIndex++;
+              if (verifyVisibleIndex >= verifyVisibles.length) {
+                verifyVisibleIndex = 0;
+              }
+            }
+          });
+
+          performanceData.layerResult
+          += '\n' + verifySomethingAndRefresh(pagFile, 'musicianAvatar', 5, '个可以替换音乐家头像的layer', '个名为\"musicianAvatar\"的layer，但是类型不是Image，无法替换图片，', '没有可以替换音乐家头像的layer', function(verifiedLayers) {
+            if (verifyMusicianIndex < verifyMusicians.length) {
+              const image = new Image();
+              image.onload = function() {
+                const pagImage = PAG.PAGImage.fromSource(image);
+                for (let i = 0; i < verifiedLayers.length; i++) {
+                  verifiedLayers[i].setImage(pagImage);
+                }
+              };
+              image.crossOrigin = 'anonymous';
+              image.src = verifyMusicians[verifyMusicianIndex];
+              verifyMusicianIndex++;
+              if (verifyMusicianIndex >= verifyMusicians.length) {
+                verifyMusicianIndex = 0;
+              }
+            }
+          });
+
+          performanceData.layerResult
+          += '\n' + verifySomethingAndRefresh(pagFile, 'adoptToast', null, '个名为\"adoptToast\"的layer，表示\"宠物气泡\"', '', '没有名为\"adoptToast\"的layer，表示\"宠物气泡\"', function(verifiedLayers) {
+            if (verifyVisibleIndex < verifyVisibles.length) {
+              for (let i = 0; i < verifiedLayers.length; i++) {
+                verifiedLayers[i].setVisible(verifyVisibles[verifyVisibleIndex]);
+              }
+              verifyVisibleIndex++;
+              if (verifyVisibleIndex >= verifyVisibles.length) {
+                verifyVisibleIndex = 0;
+              }
+            }
+          });
+
+          performanceData.layerResult
+          += '\n' + verifySomethingAndRefresh(pagFile, 'sheetMusic', null, '个名为\"sheetMusic\"的layer，表示\"曲谱\"', '', '没有名为\"sheetMusic\"的layer，表示\"曲谱\"', function(verifiedLayers) {
+            if (verifyVisibleIndex < verifyVisibles.length) {
+              for (let i = 0; i < verifiedLayers.length; i++) {
+                verifiedLayers[i].setVisible(verifyVisibles[verifyVisibleIndex]);
+              }
+              verifyVisibleIndex++;
+              if (verifyVisibleIndex >= verifyVisibles.length) {
+                verifyVisibleIndex = 0;
+              }
+            }
+          });
+
+          performanceData.layerResult 
+          += '\n' + verifySomethingAndRefresh(pagFile, 'replaceAlbumDigitNumber', 3, '个可以替换数专铭牌号的layer', '个名为\"replaceAlbumDigitNumber\"的layer，但是类型不是Text，无法设置文本，', '没有可以替换数专铭牌号的layer', function(verifiedLayers) {
+            if (verifyAlbumDigitNumberIndex < verifyAlbumColors.length) {
+              for (let i = 0; i < verifiedLayers.length; i++) {
+                verifiedLayers[i].setText(verifyAlbumDigitNumbers[verifyAlbumDigitNumberIndex]);
+              }
+              verifyAlbumDigitNumberIndex++;
+              if (verifyAlbumDigitNumberIndex >= verifyAlbumDigitNumbers.length) {
+                verifyAlbumDigitNumberIndex = 0;
+              }
+            }
+          });
+
+          updatePerformance();
+          pagView.addListener("onAnimationUpdate", () => {
+            updatePerformance({
+              renderingTime: pagView.player.renderingTime() / 1000,
+              imageDecodingTime: pagView.player.imageDecodingTime() / 1000,
+              presentingTime: pagView.player.presentingTime() / 1000,
+            });
+          });
+          pagView.setRepeatCount(0);
+          await pagView.play();
+        };
+      };
+
+      const verifySomething = (pagFile, layerName, layerType, verifySuccessMsg, verifyFailMsg) => {
+        let v = pagFile.getLayersByName(layerName);
+        let size = v.size();
+        let verifiedLayers = [];
+        for (let i = 0; i < size; i++) {
+          let layer = v.get(i);
+          if (layerType === null) {
+            verifiedLayers.push(layer);
+          }
+          else if (layer.layerType() == layerType) {
+            verifiedLayers.push(layer);
+          }
+        }
+        if (verifiedLayers.length > 0) {
+          return '有' + verifiedLayers.length + verifySuccessMsg;
+        } else {
+          return verifyFailMsg;
+        }
+      };
+
+      const verifySomethingAndRefresh = (pagFile, layerName, layerType, verifySuccessMsg, verifyNameSuccessButTypeWrongMsg, verifyFailMsg, verifySuccessTimerBlock) => {
+        let v = pagFile.getLayersByName(layerName);
+        let size = v.size();
+        let verifiedLayers = [];
+        let verifyNameSuccessButTypeWrongLayers = [];
+        for (let i = 0; i < size; i++) {
+          let layer = v.get(i);
+          if (layerType === null) {
+            verifiedLayers.push(layer);
+          } else if (layer.layerType() == layerType) {
+            verifiedLayers.push(layer);
+          } else {
+            verifyNameSuccessButTypeWrongLayers.push(layer);
+          }
+        }
+        if (verifiedLayers.length > 0) {
+          if (verifySuccessTimerBlock != null) {
+            let timer = setInterval(function () {
+              verifySuccessTimerBlock(verifiedLayers);
+            }, 2000);
+            verifySuccessTimers.add(timer);
+          }
+          return '有' + verifiedLayers.length + verifySuccessMsg;
+        } else if (verifyNameSuccessButTypeWrongLayers.length > 0) {
+          return '有' + verifyNameSuccessButTypeWrongLayers.length + verifyNameSuccessButTypeWrongMsg + namesOfLayerTypes(verifyNameSuccessButTypeWrongLayers);
+        } else {
+          return verifyFailMsg;
+        }
+      };
+
+      const nameOfLayerType = (type) => {
+        const names = {
+          '0' : '未知',
+          '1' : 'Null',
+          '2' : 'Solid',
+          '3' : 'Text(文本)',
+          '4' : 'Shape',
+          '5' : 'Image(图片)',
+          '6' : 'PreCompose(预合成)',
+        }
+        return names[type];
+      };
+
+      const namesOfLayerTypes = (layers) => {
+        let result = '它们的类型是: ';
+        let maxLength = 3;
+        if (layers.length < maxLength) {
+          maxLength = layers.length;
+        }
+        for (let i = 0; i < maxLength; i++) {
+          let name = nameOfLayerType(layers[i].layerType().toString());
+          result += name;
+          if (i != maxLength - 1) {
+            result += '、';
+          }
+        }
+        if (layers.length > maxLength) {
+          result += '...';
+        }
+        return result;
+      };
+
+      const loadImage = (src) => {
+        return new Promise((resolve) => {
+          const image = new Image();
+          image.onload = () => {
+            resolve(image);
+          };
+          image.onerror = () => {
+            resolve(false);
+          };
+          image.crossOrigin = 'anonymous';
+          image.src = src;
+        });
+      };
+
+      let resizeCoolDown = null;
+
+      window.onresize = () => {
+        if (resizeCoolDown) {
+          clearTimeout(resizeCoolDown);
+          resizeCoolDown = null;
+        }
+        resizeCoolDown = setTimeout(() => {
+          resizeCanvas();
+        }, 300);
+      };
+
+      const resizeCanvas = () => {
+        if (!playerCanvas) {
+          playerCanvas = document.getElementById("canvas");
+        }
+        const styleDeclaration = window.getComputedStyle(playerCanvas, null);
+        playerCanvas.width =
+          Number(styleDeclaration.width.replace("px", "")) * window.devicePixelRatio;
+        playerCanvas.height =
+          Number(styleDeclaration.height.replace("px", "")) * window.devicePixelRatio;
+        if (pagView) {
+          pagView.updateSize();
+          pagView.flush();
+        }
+      };
+
+      const loadJS = (url) => {
+        return new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.type = "text/javascript";
+          script.onload = function () {
+            resolve(true);
+          };
+          script.onerror = function () {
+            resolve(true);
+          };
+          script.src = url;
+          document.getElementsByTagName("head")[0].appendChild(script);
+        });
+      };
+
+      const updatePerformance = (data = {}) => {
+        Object.assign(performanceData, data);
+        const now = performance.now();
+        fpsBuffer = fpsBuffer.filter((item) => now - item < 1000);
+        if (data.renderingTime) fpsBuffer.push(now);
+        document.getElementById("performance-box").innerText = `
+          ${performanceData.layerResult}\n`;
+          // PAGFile解码耗时: ${performanceData.PAGFileDecodeTime.toFixed(2)}ms\n
+          // PAGView初始化耗时: ${performanceData.PAGViewInitTime.toFixed(2)}ms\n
+          // FPS: ${fpsBuffer.length}\n
+          // RenderingTime: ${performanceData.renderingTime.toFixed(2)}ms\n
+          // ImageDecodingTime: ${performanceData.imageDecodingTime.toFixed(2)}ms\n
+          // PresentingTime: ${performanceData.presentingTime.toFixed(2)}ms\n
+        // `;
+      };
+    </script>
+  </body>
+</html>
